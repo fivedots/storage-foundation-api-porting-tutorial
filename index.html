@@ -1,0 +1,27 @@
+<html>
+<head>
+  <title> Fibonacci on NativeIO </title>
+  <script>
+    var worker = new Worker('fib.js');
+    worker.onerror = function(err) { console.log(err); };
+    worker.onmessage = function(event) {
+      switch(event.data.command) {
+        case 'getData':
+          document.getElementById('fibonacci-result').textContent = 'Contents of the Fibonacci file: ' + event.data.result;
+        break;
+      }
+    };
+  </script>
+</head>
+<body>
+  <h1> Fibonacci on NativeIO </h1>
+  <p> Every time you reload this page, a step of the Fibonacci sequence is
+  executed and added to a file stored in NativeIO.</p> 
+  <p>This example is part of tutorial (TODO link). To learn more about NativeIO
+  read our explainer!</p>
+  <div id="fibonacci-result"></div>
+  <hr>
+  <button onClick="worker.postMessage({command: 'step'})"> Do one Fibonacci step! </button>
+  <button onClick="worker.postMessage({command: 'getData'})"> Show me the contents of the file! </button>
+  <button onClick="worker.postMessage({command: 'reset'})"> Reset the file! </button>
+</html>
