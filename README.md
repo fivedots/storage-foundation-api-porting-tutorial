@@ -1,5 +1,3 @@
-TODO: chage relative path to code
-TODO: add image border
 # How to port an application with NativeIO
 
 This guide will show you, step-by-step, how to use NativeIO from a Wasm-ported
