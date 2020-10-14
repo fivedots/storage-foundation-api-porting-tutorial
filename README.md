@@ -74,7 +74,7 @@ To get the code, run the following command:
 
 ```shell
 
-git clone https://github.com/fivedots/nativeio-how-to.git
+git clone https://github.com/fivedots/nativeio-porting-tutorial.git
 
 ```
 
@@ -113,20 +113,13 @@ application. From there execute the following command:
 
 ```shell
 
-emcc --js-library ../path/to/library\_nativeiofs.js \
-
-          --post-js ./fibonacci\_worker.js \
-
-          -s DEFAULT\_LIBRARY\_FUNCS\_TO\_INCLUDE='["$NATIVEIOFS"]' \
-
-          -s EXPORTED\_FUNCTIONS='["\_init", "\_step"]' \
-
-          -s EXTRA\_EXPORTED\_RUNTIME\_METHODS='["cwrap"]' \
-
-          -s USE\_PTHREADS=1    \
-
+emcc --js-library ../path/to/library_nativeiofs.js \
+          --post-js ./fibonacci_worker.js \
+          -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE='["$NATIVEIOFS"]' \
+          -s EXPORTED_FUNCTIONS='["_init", "_step"]' \
+          -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' \
+          -s USE_PTHREADS=1    \
           -o fib.js \
-
           fibonacci.cpp
 
 ```
@@ -135,14 +128,14 @@ After that command is finished you should have everything you need to run the
 test application! Still, those are a lot of flags, so let’s look at them in more
 detail:
 
-*   `--js-library ../path/to/library\_nativeiofs.js` adds the NativeIO
+*   `--js-library ../path/to/library_nativeiofs.js` adds the NativeIO
     filesystem to the Emscripten runtime, which is the explicitly included in
     the next argument
-*   `-s EXPORTED\_FUNCTIONS='["\_init", "\_step"]'` explicitly tells Emscripten
+*   `-s EXPORTED_FUNCTIONS='["_init", "_step"]'` explicitly tells Emscripten
     which Wasm function we will be using and therefore should be exported
-*   `-s EXTRA\_EXPORTED\_RUNTIME\_METHODS='["cwrap"]'` tells Emscripten that we
+*   `-s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]'` tells Emscripten that we
     will be using the cwrap method, which helps us call the exported functions
-*   `-s USE\_PTHREADS=1` forces our Wasm module to run on a
+*   `-s USE_PTHREADS=1` forces our Wasm module to run on a
     SharedArrayBuffer-backed memory. More details on why this is necessary
     below.
 
@@ -152,7 +145,7 @@ To run the application we just built, just run this command:
 
 ``` shell
 
-emrun --serve\_after\_exit --no\_browser index.html
+emrun --serve_after_exit --no_browser index.html
 
 ```
 
