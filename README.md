@@ -1,38 +1,41 @@
-# How to port an application with NativeIO
+# How to port an application with Storage Foundation API
 
-This guide will show you, step-by-step, how to use NativeIO from a Wasm-ported
-application. First we will install all dependencies, then compile our
-application, and finally check the results of our work in the form of a website
-that uses NativeIO as its storage backend.
+This guide will show you, step-by-step, how to use Storage Foundation API from a
+Wasm-ported application. First we will install all dependencies, then compile
+our application, and finally check the results of our work in the form of a
+website that uses Storage Foundation API as its storage backend.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [What is NativeIO?](#what-is-nativeio-what-is-nativeio)
-- [Getting our dependencies](#getting-our-dependencies-getting-our-dependencies)
-  - [Chrome](#chrome-chrome)
-  - [Emscripten](#emscripten-emscripten)
-  - [NativeIO Emscripten filesystem](#nativeio-emscripten-filesystem)
+- [What is Storage Foundation API?](#what-is-storage-foundation-api)
+- [Getting our dependencies](#getting-our-dependencies)
+  - [Chrome](#chrome)
+  - [Emscripten](#emscripten)
+  - [Storage Foundation API Emscripten filesystem](#storage-foundation-api-emscripten-filesystem)
   - [Test application](#test-application)
-- [Putting everything together](#putting-everything-together-putting-everything-together)
-- [Running it](#running-it-running-it)
-- [Further reading and future changes](#further-reading-and-future-changes-further-reading-and-future-changes)
-  - [Why do we need a web worker?](#why-do-we-need-a-web-worker-why-do-we-need-a-web-worker)
-  - [Directly calling NativeIO from the main and worker threads](#directly-calling-nativeio-from-the-main-and-worker-threads-directly-calling-nativeio-from-the-main-and-worker-threads)
-  - [Expected changes](#expected-changes-expected-changes)
+- [Putting everything together](#putting-everything-together)
+- [Running it](#running-it)
+- [Further reading and future changes](#further-reading-and-future-changes)
+  - [Why do we need a web worker?](#why-do-we-need-a-web-worker)
+  - [Directly calling Storage Foundation API from the main and worker threads](#directly-calling-storage-foundation-api-from-the-main-and-worker-threads)
+  - [Expected changes](#expected-changes)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## What is NativeIO?
+Note: Storage Foundation API used to be called NativeIO. Some references to this
+name still remain, they will be removed after the new name has landed on Chrome.
 
-First things first: NativeIO is a new storage API for the web. With its generic
-interface and fast implementation, it’s designed to help developers that need a
-low-level API for their performance-sensitive applications. A sizable part of
-these applications rely on Wasm for efficient computation and access to existing
-codebases, and so it’s important that NativeIO integrates well into that
-platform. For more details and links to our discussion forum/issue tracker,
-check out our [explainer](../README.md). We
+## What is Storage Foundation API?
+
+First things first: Storage Foundation API is a new storage API for the web.
+With its generic interface and fast implementation, it’s designed to help
+developers that need a low-level API for their performance-sensitive
+applications. A sizable part of these applications rely on Wasm for efficient
+computation and access to existing codebases, and so it’s important that Storage
+Foundation API integrates well into that platform. For more details and links to
+our discussion forum/issue tracker, check out our [explainer](../README.md). We
 would love to hear your feedback, so please reach out if you have any comments
 during/after the tutorial.
 
@@ -42,8 +45,8 @@ during/after the tutorial.
 
 ### Chrome
 
-Chrome Canary already contains a full implementation of NativeIO, so be sure to
-[download it ](https://www.google.com/chrome/canary/)and enable it by going to
+Chrome already contains a full implementation of Storage Foundation API, so be
+sure to [download it ](https://www.google.com/chrome/) and enable it by going to
 “chrome://flags” and setting “Experimental Web Platform features” to Enabled.
 
 ![Chrome flag to enable experimental features](images/1-experimental-flag.png)
@@ -54,19 +57,20 @@ Emscripten provides the compiler and runtime needed to port our application. You
 can download and install it by following their
 [guide](https://emscripten.org/docs/getting_started/downloads.html).
 
-### NativeIO Emscripten filesystem
+### Storage Foundation API Emscripten filesystem
 
-We’ve built our own library to allow Emscripten ports to use NativeIO. To use
-it, all you have to do is clone the
-[repository](https://github.com/fivedots/nativeio-emscripten-fs). We will then
-add it to the runtime during compilation.
+We’ve built our own library to allow Emscripten ports to use Storage Foundation
+API. To use it, all you have to do is clone the
+[repository](https://github.com/fivedots/storage-foundation-api-emscripten-fs).
+We will then add it to the runtime during compilation.
 
 ### Test application
 
 Today we will use a simple
-[application](https://github.com/fivedots/nativeio-how-to) that calculates the
-Fibonacci sequence and stores the results in a NativeIO file. After we are done
-building it, it will look something like this:
+[application](https://github.com/fivedots/storage-foundation-api-porting-tutorial)
+that calculates the Fibonacci sequence and stores the results in a Storage
+Foundation API file. After we are done building it, it will look something like
+this:
 
 ![Screenshot of the running example website](images/2-website.png)
 
@@ -74,7 +78,7 @@ To get the code, run the following command:
 
 ```shell
 
-git clone https://github.com/fivedots/nativeio-porting-tutorial.git
+git clone https://github.com/fivedots/storage-foundation-api-porting-tutorial.git
 
 ```
 
@@ -90,23 +94,23 @@ will end up like this:
 ![Diagram showing layers of example](images/3-diagram.png)
 
 The [main
-thread](https://github.com/fivedots/nativeio-how-to/blob/master/index.html) of
-our application is in charge of rendering the page and sending messages to the
-web worker. When the
-[worker](https://github.com/fivedots/nativeio-how-to/blob/master/fibonacci_worker.js)
+thread](https://github.com/fivedots/storage-foundation-api-porting-tutorial/blob/master/index.html)
+of our application is in charge of rendering the page and sending messages to
+the web worker. When the
+[worker](https://github.com/fivedots/storage-foundation-api-porting-tutorial/blob/master/fibonacci_worker.js)
 receives a message (‘do a step’, ‘get the data’ or ‘reset the file’), it calls
 the right functions on the Wasm module and (if needed) sends the results back to
 the main thread. A worker is needed in this example because we require the
-synchronous NativeIO methods, check out the last section of this tutorial for
-more information.
+synchronous Storage Foundation API methods, check out the last section of this
+tutorial for more information.
 
 The [Wasm
-module](https://github.com/fivedots/nativeio-how-to/blob/master/fibonacci.cpp)
+module](https://github.com/fivedots/storage-foundation-api-porting-tutorial/blob/master/fibonacci.cpp)
 can initialize the Fibonacci file or execute a step of the sequence. It
-interacts with NativeIO using standard file functions that get delivered to the
-NativeIO Emscripten filesystem. The NativeIO filesystem is the one that finally
-interacts with NativeIO, executing the appropriate operations on the actual
-file.
+interacts with Storage Foundation API using standard file functions that get
+delivered to the Storage Foundation API Emscripten filesystem. The Storage
+Foundation API filesystem is the one that finally interacts with Storage
+Foundation API, executing the appropriate operations on the actual file.
 
 So go ahead and open a terminal in the directory where you cloned the test
 application. From there execute the following command:
@@ -128,9 +132,9 @@ After that command is finished you should have everything you need to run the
 test application! Still, those are a lot of flags, so let’s look at them in more
 detail:
 
-*   `--js-library ../path/to/library_nativeiofs.js` adds the NativeIO
-    filesystem to the Emscripten runtime, which is the explicitly included in
-    the next argument
+*   `--js-library ../path/to/library_nativeiofs.js` adds the Storage Foundation
+    API filesystem to the Emscripten runtime, which is the explicitly included
+    in the next argument
 *   `-s EXPORTED_FUNCTIONS='["_init", "_step"]'` explicitly tells Emscripten
     which Wasm function we will be using and therefore should be exported
 *   `-s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]'` tells Emscripten that we
@@ -152,37 +156,37 @@ emrun --serve_after_exit --no_browser index.html
 And, using the Chrome instance with experimental features enabled, head to
 http://localhost:6931. That’s it!
 
-NOTE: It’s worth mentioning that NativeIO can only be accessed from secure
+NOTE: It’s worth mentioning that Storage Foundation API can only be accessed from secure
 origins, so your future websites would need to be served through HTTPS.
 
 ## Further reading and future changes
 
 ### Why do we need a web worker?
 
-NativeIO offers both synchronous and asynchronous versions of its methods,
-although the sync ones are only available within a worker thread. Currently
-Emscripten only supports synchronous storage backends for its filesystems, so we
-had to execute our Fibonacci application from a worker.
+Storage Foundation API offers both synchronous and asynchronous versions of its
+methods, although the sync ones are only available within a worker thread.
+Currently Emscripten only supports synchronous storage backends for its
+filesystems, so we had to execute our Fibonacci application from a worker.
 
 We are actively working on figuring out asynchronous filesystems, we hope we can
-lift this restriction soon! If you need to access NativeIO from the main thread,
-you can use the [Async
-Wrapper](https://github.com/fivedots/nativeio-async-wrapper) mentioned below.
+lift this restriction soon! If you need to access Storage Foundation API from
+the main thread, you can use the [Async
+Wrapper](https://github.com/fivedots/storage-foundation-api-async-wrapper) mentioned below.
 
-### Directly calling NativeIO from the main and worker threads
+### Directly calling Storage Foundation API from the main and worker threads
 
 In this guide we used Emscripten’s runtime and interfaces to interact with
-NativeIO. If you would like to know how to directly access our API, check out
-the [NativeIO Async
-Wrapper](https://github.com/fivedots/nativeio-async-wrapper). The instructions
-and examples there will show you how you can call the Asynchronous methods from
-NativeIO from both web workers and the main thread.
+Storage Foundation API. If you would like to know how to directly access our
+API, check out the [Storage Foundation API Async
+Wrapper](https://github.com/fivedots/storage-foundation-api-async-wrapper). The
+instructions and examples there will show you how you can call the Asynchronous
+methods from Storage Foundation API from both web workers and the main thread.
 
 
 ### Expected changes
 
-As we develop, grow and explore the limits of NativeIO, it’s likely some of the
-steps mentioned in this guide will change. To mention a few:
+As we develop, grow and explore the limits of Storage Foundation API, it’s
+likely some of the steps mentioned in this guide will change. To mention a few:
 
 *   After providing an async Emscripten filesystem, we won’t need to marshall
     Wasm calls through a web worker.
@@ -190,5 +194,5 @@ steps mentioned in this guide will change. To mention a few:
     this design constraints turns out to be to difficult to change, we expect to
 provide an Emscripten option that uses shared memory without enabling full
 pthread support.
-*   Soon you won’t need to use Chrome Canary, as NativeIO will be shipped in the standard Chrome distribution behind a flag.
-*   The NativeIO Emscripten filesystem will eventually be upstreamed so that no extra download is required.
+*   The Storage Foundation API Emscripten filesystem will eventually be
+    upstreamed so that no extra download is required.
