@@ -24,9 +24,6 @@ website that uses Storage Foundation API as its storage backend.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-Note: Storage Foundation API used to be called NativeIO. Some references to this
-name still remain, they will be removed after the new name has landed on Chrome.
-
 ## What is Storage Foundation API?
 
 First things first: Storage Foundation API is a new storage API for the web.
@@ -50,6 +47,10 @@ sure to [download it ](https://www.google.com/chrome/) and enable it by going to
 “chrome://flags” and setting “Experimental Web Platform features” to Enabled.
 
 ![Chrome flag to enable experimental features](images/1-experimental-flag.png)
+
+Storage Foundation API will be available in an [origin
+trial](https://web.dev/origin-trials/) starting with Chrome
+90. [Sign up here to participate.](https://developer.chrome.com/origintrials/#/view_trial/2916080758722396161)
 
 ### Emscripten
 
@@ -117,9 +118,9 @@ application. From there execute the following command:
 
 ```shell
 
-emcc --js-library ../path/to/library_nativeiofs.js \
+emcc --js-library ../path/to/library_sfafs.js \
           --post-js ./fibonacci_worker.js \
-          -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE='["$NATIVEIOFS"]' \
+          -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE='["$SFAFS"]' \
           -s EXPORTED_FUNCTIONS='["_init", "_step"]' \
           -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' \
           -s USE_PTHREADS=1    \
@@ -132,7 +133,7 @@ After that command is finished you should have everything you need to run the
 test application! Still, those are a lot of flags, so let’s look at them in more
 detail:
 
-*   `--js-library ../path/to/library_nativeiofs.js` adds the Storage Foundation
+*   `--js-library ../path/to/library_sfafs.js` adds the Storage Foundation
     API filesystem to the Emscripten runtime, which is the explicitly included
     in the next argument
 *   `-s EXPORTED_FUNCTIONS='["_init", "_step"]'` explicitly tells Emscripten
