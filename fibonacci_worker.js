@@ -1,11 +1,14 @@
 var fibonacciInit = Module.cwrap('init', null, ['string']);
 var fibonacciStep = Module.cwrap('step', null, ['string']);
 
-var filePath = '/nativeio/fibonacci';
+var filePath = '/sfa/fibonacci';
 
 Module.onRuntimeInitialized = function() {
-  FS.mkdir('/nativeio');
-  FS.mount(NATIVEIOFS, { root: '.' }, '/nativeio');
+  FS.mkdir('/sfa');
+  FS.mount(SFAFS, { root: '.' }, '/sfa');
+
+  // Storage Foundation API must explicitly request capacity.
+  storageFoundation.requestCapacitySync(10000);
 
   fibonacciInit(filePath);
   getData();

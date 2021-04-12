@@ -41,7 +41,7 @@ void init(const char* path) {
   streampos end = file.tellg();
   if(end-begin < 2) {
     file.close();
-    //TODO: use ios::trunc once we support setLength in NativeIO
+    //TODO: use ios::trunc here.
     remove(path);
     file.open(path, ios::out | ios::binary);
     unsigned int val = 1;
